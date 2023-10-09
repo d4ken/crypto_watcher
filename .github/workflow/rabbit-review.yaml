@@ -5,9 +5,11 @@ permissions:
   pull-requests: write
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  pull_request:
+    types: [opened]
   pull_request_review_comment:
+    types: [created]
+  issue_comment:
     types: [created]
 
 concurrency:
@@ -22,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: coderabbitai/ai-pr-reviewer@latest
+      - uses: coderabbitai/openai-pr-reviewer@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
