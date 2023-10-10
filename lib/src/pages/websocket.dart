@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:crypto_watcher/src/components/coin_view.dart';
+import 'package:crypto_watcher/src/service/bitbank_api.dart';
 import 'package:flutter/material.dart';
-import 'package:web_socket_channel/io.dart';
 
 class WebsocketApi extends StatefulWidget {
   const WebsocketApi({super.key});
@@ -13,50 +12,37 @@ class WebsocketApi extends StatefulWidget {
 }
 
 class _WebsocketApiState extends State<WebsocketApi> {
-  final String prefix = "ticker_";
-  String currency = "btc_jpy";
-  String currencyEth = "eth_jpy";
-  String btcJpyPrice = "0";
-  String ethJpyPrice = "0";
-
-  final channel = IOWebSocketChannel.connect(
-      'wss://stream.bitbank.cc/socket.io/?EIO=3&transport=websocket');
+  BitbankApi bbApi = BitbankApi();
+  String btcPrice = "";
+  String ethPrice = "";
+  String xrpPrice = "";
 
   @override
   void initState() {
     super.initState();
-    channel.sink.add("42[\"join-room\",\"$prefix$currency\"]");
-    channel.sink.add("42[\"join-room\",\"$prefix$currencyEth\"]");
-
+    bbApi.pongSender();
+    // 25秒おきにpong返信
     Timer.periodic(const Duration(seconds: 25), (_) {
-      channel.sink.add("42[\"join-room\",\"$prefix$currency\"]");
-      channel.sink.add("42[\"join-room\",\"$prefix$currencyEth\"]");
+      bbApi.pongSender();
     });
     streamListener();
   }
 
-  @override
-  void dispose() {
-    channel.sink.close();
-    super.dispose();
+  // 価格情報更新処理
+  streamListener() async {
+    bbApi.messageChannel(() => {
+          setState(() {
+            btcPrice = BitbankApi.coinPrices['btc'].toString();
+            ethPrice = BitbankApi.coinPrices['eth'].toString();
+            xrpPrice = BitbankApi.coinPrices['xrp'].toString();
+          })
+        });
   }
 
-  streamListener() async {
-    channel.stream.listen((message) {
-      var reg = RegExp(r'^\d*');
-      var jsonStr = message.toString().replaceAll(reg, "");
-      if (jsonStr.contains("message")) {
-        var tickerData = json.decode(jsonStr)[1];
-        setState(() {
-          // extract last price
-          if (tickerData["room_name"].toString().contains("btc")) {
-            btcJpyPrice = tickerData["message"]["data"]["last"];
-          } else if (tickerData["room_name"].toString().contains("eth")) {
-            ethJpyPrice = tickerData["message"]["data"]["last"];
-          }
-        });
-      }
-    });
+  @override
+  void dispose() {
+    bbApi.closeChannel();
+    super.dispose();
   }
 
   @override
@@ -67,8 +53,9 @@ class _WebsocketApiState extends State<WebsocketApi> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CoinView(coinName: currency, price: btcJpyPrice),
-            CoinView(coinName: currencyEth, price: ethJpyPrice)
+            CoinView(coinName: bbApi.coinNames[0], price: btcPrice),
+            CoinView(coinName: bbApi.coinNames[1], price: ethPrice),
+            CoinView(coinName: bbApi.coinNames[2], price: xrpPrice),
           ],
         ),
       ),
