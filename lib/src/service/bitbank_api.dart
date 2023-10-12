@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto_watcher/src/constants.dart';
 import 'package:web_socket_channel/io.dart';
 
 class BitbankApi {
@@ -31,7 +32,8 @@ class BitbankApi {
         var tickerData = json.decode(jsonStr)[1];
         // extract last price
         var roomName = tickerData["room_name"].toString();
-        String lastPrice = tickerData["message"]["data"]["last"];
+        String last = tickerData["message"]["data"]["last"];
+        String lastPrice = last.replaceAllMapped(Define.div3Format, (match) => '${match[1]},');
         switch(roomName) {
           case "ticker_btc_jpy":
             coinPrices['btc'] = lastPrice;
