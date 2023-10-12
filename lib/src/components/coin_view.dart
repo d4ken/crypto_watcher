@@ -1,24 +1,27 @@
+import 'package:crypto_watcher/src/models/coin.dart';
 import 'package:flutter/material.dart';
 
 class CoinView extends StatelessWidget {
-  const CoinView({super.key, required this.coinName, required this.price});
+  const CoinView({super.key, required this.coin});
 
-  final String coinName;
-  final String price;
+  final Coin coin;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        Text(
-          coinName.toUpperCase().replaceAll("_", "/"),
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.white, fontSize: 30),
+        Padding(
+          padding: const EdgeInsets.only(left: 40.0),
+          child: Text(
+            coin.name.toUpperCase().replaceAll("_", "/"),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white, fontSize: 24),
+          ),
         ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           child: Text(
-            price,
+            coin.price,
             style: const TextStyle(
                 fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 24),
           ),
