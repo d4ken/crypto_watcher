@@ -49,6 +49,8 @@ class BitbankApi {
         }
       }
       updateFunction();
+    }, onError: (error) {
+      print('Error in Websocket communication: $error');
     });
   }
 }
