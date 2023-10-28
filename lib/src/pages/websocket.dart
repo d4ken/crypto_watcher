@@ -5,6 +5,7 @@ import 'package:crypto_watcher/src/models/coin.dart';
 import 'package:crypto_watcher/src/service/bitbank_api.dart';
 import 'package:crypto_watcher/src/service/bitflyer_api.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 
 class WebsocketApi extends StatefulWidget {
   const WebsocketApi({super.key});
@@ -13,19 +14,11 @@ class WebsocketApi extends StatefulWidget {
   State<WebsocketApi> createState() => _WebsocketApiState();
 }
 
-class _WebsocketApiState extends State<WebsocketApi> {
-  BitbankApi bbApi = BitbankApi();
-  BitflyerApi bfApi = BitflyerApi();
-
-  Coin bitBankBTC = Coin("Bitbank", "");
-  Coin bitBankETH = Coin("Bitbank", "");
-  Coin bitflyerBTC = Coin("Bitflyer", "");
-  Coin bitflyerETH = Coin("Bitflyer", "");
-
+class _WebsocketApiState extends State<WebsocketApi> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
+    WidgetsBinding.instance.addObserver(this);
     bfApi.pongSender();
     bbApi.pongSender();
     // 25秒おきにpong返信
@@ -34,6 +27,39 @@ class _WebsocketApiState extends State<WebsocketApi> {
     });
     streamListener();
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    bbApi.closeChannel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // TODO: implement didChangeAppLifecycleState
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // アプリケーションがフォアグラウンドに移行したときの処理
+      print("foreground");
+      bbApi.pongSender();
+      bfApi.pongSender();
+    } else if (state == AppLifecycleState.paused) {
+      // アプリケーションがバックグラウンドに移行したときの処理
+      print("background");
+    }
+  }
+
+  BitbankApi bbApi = BitbankApi();
+  BitflyerApi bfApi = BitflyerApi();
+
+  Coin bitBankBTC = Coin("Bitbank", "");
+  Coin bitBankETH = Coin("Bitbank", "");
+  Coin bitflyerBTC = Coin("Bitflyer", "");
+  Coin bitflyerETH = Coin("Bitflyer", "");
+
+
 
   // 価格情報更新処理
   streamListener() async {
@@ -52,48 +78,43 @@ class _WebsocketApiState extends State<WebsocketApi> {
         });
   }
 
-  @override
-  void dispose() {
-    bbApi.closeChannel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueGrey,
         centerTitle: true,
-        title: const Text("Realtime Ticker",
-            style: TextStyle(color: Colors.white)),
+        title: const Text("Realtime Ticker"),
         actions: [],
       ),
-      backgroundColor: Colors.blueAccent,
       body: DefaultTabController(
         length: 3,
         child: Column(
           children: [
             const TabBar(tabs: [
               Tab(
-                child: Text(
-                  "BTC/JPY",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+                child: Icon(FontAwesomeIconDataBrands(0xe92e)),
+                // child: Text(
+                //   "BTC/JPY",
+                //   style: TextStyle(
+                //       color: Colors.white, fontWeight: FontWeight.bold),
+                // ),
               ),
               Tab(
-                child: Text(
-                  "ETH/JPY",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+                child: Icon(FontAwesomeIconDataBrands(0xe981)),
+                // child: Text(
+                //   "ETH/JPY",
+                //   style: TextStyle(
+                //       color: Colors.white, fontWeight: FontWeight.bold),
+                // ),
               ),
               Tab(
-                child: Text(
-                  "XRP/JPY",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
+              child: Icon(IconsaxData(0xecec)),
+              //   child: Text(
+              //     "XRP/JPY",
+              //     style: TextStyle(
+              //         color: Colors.white, fontWeight: FontWeight.bold),
+              //   ),
               ),
             ]),
             Expanded(
